@@ -7,8 +7,8 @@ import keras
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 import tensorflow as tf
 st.set_page_config(
-    page_title="Tomato Leaf Detector",
-    page_icon="🍅",
+    page_title="Leaf Detector",
+    page_icon="🌱",
     layout="centered"
 )
 
@@ -127,7 +127,7 @@ def tta_predict(model, arr):
 
 # Hero
 st.markdown('<div class="badge-row"><div class="badge-pill">AI-Powered Plant Care</div></div>', unsafe_allow_html=True)
-st.markdown('<h1 class="hero-title">Tomato Leaf <em>Disease Detector</em> 🍅</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="hero-title">Tomato Leaf <em>Disease Detector</em> 🌱</h1>', unsafe_allow_html=True)
 st.markdown('<p class="hero-sub">Upload a leaf photo — our AI will tell you if your plant needs care 🌿</p>', unsafe_allow_html=True)
 
 st.markdown("""
@@ -155,7 +155,7 @@ with st.sidebar:
 model = load_model()
 
 uploaded = st.file_uploader(
-    "Drop your tomato leaf photo here",
+    "Drop your leaf photo here",
     type=["jpg", "jpeg", "png"]
 )
 
