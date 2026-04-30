@@ -224,3 +224,4 @@ st.markdown(
     '<div class="footer-text">Built with ResNet50V2 · Transfer Learning · PlantVillage · Seed 7282</div>',
     unsafe_allow_html=True
 )
+st.markdown('<h1 class="hero-title">Powered by <em>Barira Aurangzaib</em></h1>', unsafe_allow_html=True)
