@@ -98,7 +98,7 @@ def load_model():
         st.error("Model file not found!")
         return None
     try:
-        return tf.keras.models.load_model("best_model.keras")
+        return tf.keras.models.load_model("best_model.keras", compile=False)
     except Exception as e:
         st.error(f"Model load error: {e}")
         return None
