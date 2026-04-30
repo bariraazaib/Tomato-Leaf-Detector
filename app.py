@@ -127,7 +127,7 @@ def tta_predict(model, arr):
 
 # Hero
 st.markdown('<div class="badge-row"><div class="badge-pill">AI-Powered Plant Care</div></div>', unsafe_allow_html=True)
-st.markdown('<h1 class="hero-title">Tomato Leaf <em>Disease Detector</em> 🌱</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="hero-title">Leaf <em>Disease Detector</em> 🌱</h1>', unsafe_allow_html=True)
 st.markdown('<p class="hero-sub">Upload a leaf photo — our AI will tell you if your plant needs care 🌿</p>', unsafe_allow_html=True)
 
 st.markdown("""
