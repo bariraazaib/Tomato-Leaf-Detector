@@ -1,9 +1,9 @@
+import os
 import streamlit as st
 import numpy as np
 from PIL import Image
-import tensorflow as tf
-import os
-import os
+import keras
+
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 import tensorflow as tf
 st.set_page_config(
@@ -99,10 +99,9 @@ def load_model():
         st.error("Model file not found!")
         return None
     try:
-        return tf.keras.models.load_model(
-            "best_model.keras", 
-            compile=False,
-            safe_mode=False
+        return keras.saving.load_model(
+            "best_model.keras",
+            compile=False
         )
     except Exception as e:
         st.error(f"Model load error: {e}")
