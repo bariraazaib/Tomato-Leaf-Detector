@@ -3,7 +3,9 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 import os
-
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+import tensorflow as tf
 st.set_page_config(
     page_title="Tomato Leaf Detector",
     page_icon="🍅",
@@ -97,14 +99,14 @@ def load_model():
         st.error("Model file not found!")
         return None
     try:
-        import tf_keras
-        return tf_keras.models.load_model("best_model.keras", compile=False)
-    except Exception:
-        try:
-            return tf.keras.models.load_model("best_model.keras", compile=False)
-        except Exception as e:
-            st.error(f"Model load error: {e}")
-            return None
+        return tf.keras.models.load_model(
+            "best_model.keras", 
+            compile=False,
+            safe_mode=False
+        )
+    except Exception as e:
+        st.error(f"Model load error: {e}")
+        return None
 # ✅ FIXED — simple /255.0 (same as training)
 def preprocess(img):
     arr = np.array(
