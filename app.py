@@ -2,11 +2,10 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import os
 
 st.set_page_config(
-    page_title="🌸 Tomato Leaf Detector",
+    page_title="Tomato Leaf Detector",
     page_icon="🍅",
     layout="centered"
 )
@@ -55,54 +54,78 @@ IMG_SIZE    = 224
 CLASS_NAMES = ["Healthy", "Early Blight", "Septoria Leaf Spot"]
 CLASS_INFO  = {
     "Healthy": {
-        "emoji": "🌱", "header_class": "result-header-healthy",
+        "emoji": "🌱",
+        "header_class": "result-header-healthy",
         "desc": "Your tomato plant looks healthy and thriving! Keep up the great care.",
         "dots": ["#5a8a52","#d4607e","#8e5aad","#c8602a"],
-        "tips": ["Keep watering schedule consistent and even.",
-                 "Monitor regularly for any early warning signs.",
-                 "Ensure good air circulation around your plants.",
-                 "Feed with balanced fertiliser every 2–3 weeks."]
+        "tips": [
+            "Keep watering schedule consistent and even.",
+            "Monitor regularly for any early warning signs.",
+            "Ensure good air circulation around your plants.",
+            "Feed with balanced fertiliser every 2-3 weeks."
+        ]
     },
     "Early Blight": {
-        "emoji": "🍂", "header_class": "result-header-early",
+        "emoji": "🍂",
+        "header_class": "result-header-early",
         "desc": "Early Blight (Alternaria solani) detected — a common fungal infection.",
         "dots": ["#d4607e","#c8602a","#5a8a52","#8e5aad"],
-        "tips": ["Remove and destroy all infected leaves immediately.",
-                 "Apply a copper-based fungicide spray weekly.",
-                 "Water at the base only — avoid overhead watering.",
-                 "Rotate your crops in the next growing season."]
+        "tips": [
+            "Remove and destroy all infected leaves immediately.",
+            "Apply a copper-based fungicide spray weekly.",
+            "Water at the base only — avoid overhead watering.",
+            "Rotate your crops in the next growing season."
+        ]
     },
     "Septoria Leaf Spot": {
-        "emoji": "🔴", "header_class": "result-header-septoria",
+        "emoji": "🔴",
+        "header_class": "result-header-septoria",
         "desc": "Septoria Leaf Spot (Septoria lycopersici) found — act quickly!",
         "dots": ["#8e5aad","#d4607e","#c8602a","#5a8a52"],
-        "tips": ["Remove affected leaves and dispose carefully.",
-                 "Apply chlorothalonil or mancozeb fungicide.",
-                 "Water at soil level — never overhead.",
-                 "Space plants further apart to improve airflow."]
+        "tips": [
+            "Remove affected leaves and dispose carefully.",
+            "Apply chlorothalonil or mancozeb fungicide.",
+            "Water at soil level — never overhead.",
+            "Space plants further apart to improve airflow."
+        ]
     }
 }
-FILL_CLASSES = ["prob-fill-green","prob-fill-rose","prob-fill-purple"]
+FILL_CLASSES = ["prob-fill-green", "prob-fill-rose", "prob-fill-purple"]
 
 @st.cache_resource
 def load_model():
     if not os.path.exists("best_model.keras"):
+        st.error("Model file not found!")
         return None
-    return tf.keras.models.load_model("best_model.keras")
+    try:
+        return tf.keras.models.load_model("best_model.keras")
+    except Exception as e:
+        st.error(f"Model load error: {e}")
+        return None
 
+# ✅ FIXED — simple /255.0 (same as training)
 def preprocess(img):
-    arr = np.array(img.convert("RGB").resize((IMG_SIZE,IMG_SIZE)),dtype=np.float32)
-    return preprocess_input(arr)
+    arr = np.array(
+        img.convert("RGB").resize((IMG_SIZE, IMG_SIZE)),
+        dtype=np.float32
+    ) / 255.0
+    return arr
 
 def tta_predict(model, arr):
-    augs = [arr,np.fliplr(arr),np.flipud(arr),np.fliplr(np.flipud(arr)),
-            np.clip(arr+0.15,-1,1),np.clip(arr-0.15,-1,1)]
-    return model.predict(np.stack(augs,0),verbose=0).mean(0)
+    augs = [
+        arr,
+        np.fliplr(arr),
+        np.flipud(arr),
+        np.fliplr(np.flipud(arr)),
+        np.clip(arr + 0.1, 0, 1),
+        np.clip(arr - 0.1, 0, 1),
+    ]
+    return model.predict(np.stack(augs, 0), verbose=0).mean(0)
 
-# ── Hero
-st.markdown('<div class="badge-row"><div class="badge-pill">✿ AI-Powered Plant Care</div></div>', unsafe_allow_html=True)
+# Hero
+st.markdown('<div class="badge-row"><div class="badge-pill">AI-Powered Plant Care</div></div>', unsafe_allow_html=True)
 st.markdown('<h1 class="hero-title">Tomato Leaf <em>Disease Detector</em> 🍅</h1>', unsafe_allow_html=True)
-st.markdown('<p class="hero-sub">Upload a leaf photo and let our model tell you if your plant is healthy or needs some love 🌿</p>', unsafe_allow_html=True)
+st.markdown('<p class="hero-sub">Upload a leaf photo — our AI will tell you if your plant needs care 🌿</p>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="chips-row">
@@ -112,65 +135,89 @@ st.markdown("""
 </div>""", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.markdown("### ✿ About")
-    st.markdown("**Model:** MobileNetV2 (Transfer Learning)  \n**Dataset:** PlantVillage · 500 imgs/class  \n**Input:** 224×224 px  \n**Augmentation:** 5 standard + Black Patch  \n**TTA:** 6-fold averaging")
+    st.markdown("### About")
+    st.markdown("""
+    **Model:** ResNet50V2 (Transfer Learning)  
+    **Dataset:** PlantVillage · 500 imgs/class  
+    **Seed:** 7282  
+    **Accuracy:** 97%  
+    **Input:** 224×224 px  
+    **Augmentation:** 5 standard + Black Patch  
+    **TTA:** 6-fold averaging
+    """)
     st.divider()
-    use_tta = st.toggle("Use TTA (6x accuracy boost)", value=True)
-    st.markdown("*Averages predictions over 6 flips & brightness shifts.*")
+    use_tta = st.toggle("Use TTA (better accuracy)", value=True)
+    st.markdown("*Averages predictions over 6 augmentations.*")
 
 model = load_model()
-if model is None:
-    st.warning("⚠️ `best_model.keras` not found. Add your trained model file to the app folder.")
 
-uploaded = st.file_uploader("📷 Drop your tomato leaf photo here", type=["jpg","jpeg","png"])
+uploaded = st.file_uploader(
+    "Drop your tomato leaf photo here",
+    type=["jpg", "jpeg", "png"]
+)
 
 if uploaded and model:
     img = Image.open(uploaded)
-    col1, col2 = st.columns([1,1], gap="medium")
+    col1, col2 = st.columns([1, 1], gap="medium")
     with col1:
-        st.image(img, caption="Your leaf ✿", use_container_width=True)
+        st.image(img, caption="Your leaf", use_container_width=True)
     with col2:
         st.markdown(f"**Ready to analyse!**")
-        st.markdown(f"📁 `{uploaded.name}`")
-        if st.button("✦ Analyse Leaf"):
-            with st.spinner("Analysing your leaf... 🌿"):
+        st.markdown(f"File: `{uploaded.name}`")
+        if st.button("Analyse Leaf"):
+            with st.spinner("Analysing... 🌿"):
                 arr   = preprocess(img)
-                probs = tta_predict(model,arr) if use_tta else model.predict(np.expand_dims(arr,0),verbose=0)[0]
-            idx   = int(np.argmax(probs))
-            cls   = CLASS_NAMES[idx]
-            conf  = float(probs[idx])*100
-            info  = CLASS_INFO[cls]
-            tta_l = " · TTA ✦" if use_tta else ""
+                probs = tta_predict(model, arr) if use_tta else \
+                        model.predict(np.expand_dims(arr, 0), verbose=0)[0]
+
+            idx  = int(np.argmax(probs))
+            cls  = CLASS_NAMES[idx]
+            conf = float(probs[idx]) * 100
+            info = CLASS_INFO[cls]
+            tta_l = " · TTA" if use_tta else ""
 
             st.markdown(f"""
             <div class="{info['header_class']}">
               <div style="font-size:40px;margin-bottom:10px">{info['emoji']}</div>
               <div class="result-class-name">{cls}</div>
               <div class="result-desc-text">{info['desc']}</div>
-              <div class="conf-pill">✦ {conf:.1f}% confident{tta_l}</div>
+              <div class="conf-pill">{conf:.1f}% confident{tta_l}</div>
             </div>""", unsafe_allow_html=True)
 
             bars = '<div class="prob-section"><div class="prob-label-top">Class Probabilities</div>'
-            for i,name in enumerate(CLASS_NAMES):
-                pct = probs[i]*100
-                bars += f'<div class="prob-row-item"><div class="prob-name-row">{name}<span>{pct:.1f}%</span></div><div class="prob-track"><div class="{FILL_CLASSES[i]}" style="width:{pct:.1f}%"></div></div></div>'
+            for i, name in enumerate(CLASS_NAMES):
+                pct = probs[i] * 100
+                bars += f'''<div class="prob-row-item">
+                    <div class="prob-name-row">{name}<span>{pct:.1f}%</span></div>
+                    <div class="prob-track">
+                      <div class="{FILL_CLASSES[i]}" style="width:{pct:.1f}%"></div>
+                    </div></div>'''
             bars += '</div>'
             st.markdown(bars, unsafe_allow_html=True)
 
             st.markdown("---")
-            st.markdown("**🌿 Care Recommendations**")
-            for i,tip in enumerate(info["tips"]):
-                c = info["dots"][i%4]
-                st.markdown(f'<div class="tip-item"><div class="tip-dot" style="background:{c}22;color:{c}">✦</div>{tip}</div>', unsafe_allow_html=True)
+            st.markdown("**Care Recommendations**")
+            for i, tip in enumerate(info["tips"]):
+                c = info["dots"][i % 4]
+                st.markdown(
+                    f'<div class="tip-item"><div class="tip-dot" '
+                    f'style="background:{c}22;color:{c}">✦</div>{tip}</div>',
+                    unsafe_allow_html=True
+                )
 
 elif not model:
-    pass
+    st.warning("Add best_model.keras to your repo!")
 else:
     st.markdown("""
     <div class="girly-card" style="text-align:center;padding:40px">
       <div style="font-size:40px;margin-bottom:12px">📷</div>
-      <div style="font-family:'Playfair Display',serif;font-size:18px;color:#3d2a35;margin-bottom:6px">Upload a leaf to get started</div>
-      <div style="font-size:13px;color:#8a6070">Our AI will instantly tell you your plant's health status 🌿</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:#3d2a35;margin-bottom:6px">
+        Upload a leaf to get started</div>
+      <div style="font-size:13px;color:#8a6070">
+        Our AI will instantly tell you your plant's health status 🌿</div>
     </div>""", unsafe_allow_html=True)
 
-st.markdown('<div class="footer-text">Built with MobileNetV2 · Transfer Learning · PlantVillage Dataset ✿</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="footer-text">Built with ResNet50V2 · Transfer Learning · PlantVillage · Seed 7282</div>',
+    unsafe_allow_html=True
+)
