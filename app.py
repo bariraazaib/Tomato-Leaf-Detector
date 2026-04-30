@@ -91,18 +91,20 @@ CLASS_INFO  = {
     }
 }
 FILL_CLASSES = ["prob-fill-green", "prob-fill-rose", "prob-fill-purple"]
-
 @st.cache_resource
 def load_model():
     if not os.path.exists("best_model.keras"):
         st.error("Model file not found!")
         return None
     try:
-        return tf.keras.models.load_model("best_model.keras", compile=False)
-    except Exception as e:
-        st.error(f"Model load error: {e}")
-        return None
-
+        import tf_keras
+        return tf_keras.models.load_model("best_model.keras", compile=False)
+    except Exception:
+        try:
+            return tf.keras.models.load_model("best_model.keras", compile=False)
+        except Exception as e:
+            st.error(f"Model load error: {e}")
+            return None
 # ✅ FIXED — simple /255.0 (same as training)
 def preprocess(img):
     arr = np.array(
